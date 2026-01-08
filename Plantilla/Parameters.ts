@@ -15,7 +15,7 @@ export interface StageConfig {
   icon: LucideIcon;
 }
 
-// --- CONSTANTES DE ESTILO ---
+// --- CONSTANTES DE ESTILO (Fondo Blanco, Texto Negro, Acentos Rojos) ---
 export const COLORS = {
   bg: 'bg-white',
   card: 'bg-white',
@@ -134,6 +134,7 @@ export const listAvailableModels = async (): Promise<string[]> => {
  */
 export const askGemini = async (question: string, model: string): Promise<string> => {
      try {
+         // Direct usage of process.env.API_KEY as per guidelines.
          const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
          const response = await ai.models.generateContent({
              model: model,
