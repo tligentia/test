@@ -6,6 +6,7 @@ export interface AppItem {
   name: string;
   url: string;
   visible: boolean;
+  key?: string;
 }
 
 // --- CONSTANTS ---
@@ -64,21 +65,31 @@ const fetchAppData = async (): Promise<AppItem[]> => {
     const idx = {
       nombre: header.findIndex(h => h.includes('nombre') || h.includes('name')),
       url: header.findIndex(h => h.includes('url') || h.includes('link')),
-      visible: header.findIndex(h => h.includes('visible') || h.includes('mostrar'))
+      visible: header.findIndex(h => h.includes('visible') || h.includes('mostrar')),
+      key: header.findIndex(h => h.includes('key') || h.includes('clave') || h.includes('ofuscacion'))
     };
 
-    return rows.slice(1).map(row => {
+    const apps = rows.slice(1).map(row => {
       const cols = parseCSVLine(row);
       const name = cols[idx.nombre !== -1 ? idx.nombre : 0] || '';
       const url = cols[idx.url !== -1 ? idx.url : 2] || '';
       const visibleStr = cols[idx.visible !== -1 ? idx.visible : 3] || '';
+      const keyVal = idx.key !== -1 ? cols[idx.key] : '';
       
       let isVisible = true;
       if (idx.visible !== -1 && visibleStr !== '') {
         isVisible = ['sí', 'si', 'yes', 'true', '1', 's'].includes(visibleStr.toLowerCase());
       }
-      return { name, url, visible: isVisible };
+      return { name, url, visible: isVisible, key: keyVal };
     }).filter(app => app.name && isValidUrl(app.url) && app.visible);
+
+    // Si hay alguna clave en la hoja, guardarla como clave maestra para el ofuscador
+    const masterKey = apps.find(a => a.key)?.key;
+    if (masterKey) {
+        localStorage.setItem('app_remote_master_key', masterKey);
+    }
+
+    return apps;
   } catch (error) {
     console.error('Error fetching apps:', error);
     return [];

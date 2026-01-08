@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Key, ShieldCheck, RefreshCcw, Eye, EyeOff, ShieldAlert, Lock, Database, Loader2, CheckCircle2, XCircle, Sparkles, Send, Table, Cpu, ChevronDown, Globe, Plus, Zap } from 'lucide-react';
 import { getShortcutKey, crypto, validateKey, listAvailableModels, askGemini, AUTHORIZED_DOMAIN } from './Parameters';
@@ -11,8 +10,6 @@ interface AjustesProps {
   onApiKeySave: (key: string) => void;
   userIp: string | null;
 }
-
-const SHEET_ID = '1wJkM8rmiXCrnB0K4h9jtme0m7f5I3y1j1PX5nmEaTII';
 
 export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApiKeySave, userIp }) => {
   const [showKey, setShowKey] = useState(false);
@@ -39,7 +36,7 @@ export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApi
 
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   const isAuthorized = !hostname || hostname === 'localhost' || hostname === AUTHORIZED_DOMAIN;
-  const isCurrentIpMemorized = userIp ? memorizedIps.includes(crypto.obfuscate(userIp, "tligent")) : false;
+  const isCurrentIpMemorized = userIp ? memorizedIps.includes(crypto.obfuscate(userIp)) : false;
 
   const loadModels = async () => {
     setIsLoadingModels(true);
@@ -112,7 +109,7 @@ export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApi
 
   const handleMemorizeIp = () => {
     if (!userIp) return;
-    const obfuscated = crypto.obfuscate(userIp, "tligent");
+    const obfuscated = crypto.obfuscate(userIp);
     if (!memorizedIps.includes(obfuscated)) {
       const newList = [...memorizedIps, obfuscated];
       setMemorizedIps(newList);
@@ -124,7 +121,8 @@ export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApi
     if (!aiQuestion.trim() || isAsking) return;
     setIsAsking(true);
     try {
-      const res = await askGemini(aiQuestion, selectedModel, apiKey);
+      // NOTA: No pasamos apiKey aquí, askGemini usa process.env.API_KEY automáticamente
+      const res = await askGemini(aiQuestion, selectedModel);
       setAiAnswer(res);
     } catch (e: any) {
       setAiAnswer(`System Error: ${e.message}`);
@@ -139,7 +137,7 @@ export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApi
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300">
       <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl max-h-[95vh] overflow-hidden flex flex-col border border-gray-100 animate-in zoom-in-95">
         
-        {/* HEADER COMPACTO */}
+        {/* HEADER */}
         <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <div className="flex items-center gap-4">
             <div className="p-2 bg-gray-900 rounded-xl text-white shadow-lg"><ShieldCheck size={20} /></div>

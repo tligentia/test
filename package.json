@@ -13,6 +13,7 @@
     "react-dom": "18.2.0",
     "@google/genai": "1.10.0",
     "jspdf": "2.5.2",
+    "dompurify": "3.2.4",
     "html2canvas": "1.4.1",
     "docx": "8.5.0",
     "uuid": "10.0.0",
