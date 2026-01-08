@@ -1,22 +1,24 @@
+
 import React, { useState, useEffect } from 'react';
-import { X, Key, ShieldCheck, RefreshCcw, Eye, EyeOff, ShieldAlert, Lock, Database, Loader2, CheckCircle2, XCircle, Sparkles, Send, Table, Cpu, ChevronDown, Globe, Plus, Zap } from 'lucide-react';
-import { getShortcutKey, crypto, validateKey, listAvailableModels, askGemini, AUTHORIZED_DOMAIN } from './Parameters';
+import { X, ShieldCheck, RefreshCcw, ShieldAlert, Cpu, ChevronDown, Globe, Plus, Zap, Loader2, Sparkles, Send, Database, Key, Eye, EyeOff } from 'lucide-react';
+import { crypto, listAvailableModels, askGemini, AUTHORIZED_DOMAIN, getShortcutKey } from './Parameters';
 import { Obfuscator } from './Obfuscator';
 
 interface AjustesProps {
   isOpen: boolean;
   onClose: () => void;
-  apiKey: string;
-  onApiKeySave: (key: string) => void;
   userIp: string | null;
 }
 
-export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApiKeySave, userIp }) => {
-  const [showKey, setShowKey] = useState(false);
+export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, userIp }) => {
   const [showObfuscator, setShowObfuscator] = useState(false);
   const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [isValidating, setIsValidating] = useState(false);
   
+  // API Key State
+  const [apiKey, setApiKey] = useState(localStorage.getItem('GEMINI_API_KEY') || '');
+  const [showPassword, setShowPassword] = useState(false);
+
   // AI Sandbox states
   const [aiQuestion, setAiQuestion] = useState('');
   const [aiAnswer, setAiAnswer] = useState('');
@@ -45,59 +47,39 @@ export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApi
       setAvailableModels(models);
       
       if (!selectedModel || !models.includes(selectedModel)) {
-        const optimal = models.find(m => m === 'gemini-3-flash-preview') || 
-                        models.find(m => m.includes('flash-preview')) || 
-                        models.find(m => m.includes('flash')) || 
-                        models[0];
-                        
+        const optimal = models.find(m => m === 'gemini-3-flash-preview') || models[0];
         if (optimal) {
           setSelectedModel(optimal);
           localStorage.setItem('app_selected_model', optimal);
         }
       }
+      setStatus('success');
     } catch (e) {
       console.error("Failed loading models", e);
+      setStatus('error');
     } finally {
       setIsLoadingModels(false);
     }
   };
 
-  const handleConfigCheck = async (keyToValidate: string) => {
-    if (!keyToValidate) {
-        setStatus('idle');
-        setAvailableModels([]);
-        return;
-    }
-    setIsValidating(true);
-    const ok = await validateKey(keyToValidate);
-    setStatus(ok ? 'success' : 'error');
-    if (ok) {
-      await loadModels();
-    } else {
-      const models = await listAvailableModels();
-      setAvailableModels(models);
-    }
-    setIsValidating(false);
-  };
-
   useEffect(() => {
     if (isOpen) {
-      handleConfigCheck(apiKey);
+      loadModels();
     }
   }, [isOpen]);
 
-  const handleKeyChange = (val: string) => {
-    const shortcut = getShortcutKey(val);
-    if (shortcut) {
-      onApiKeySave(shortcut);
-      handleConfigCheck(shortcut);
+  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    const shortcutKey = getShortcutKey(val);
+    
+    if (shortcutKey) {
+        setApiKey(shortcutKey);
+        localStorage.setItem('GEMINI_API_KEY', shortcutKey);
+        setStatus('success');
     } else {
-      onApiKeySave(val);
-      if (val.length > 20) {
-          handleConfigCheck(val);
-      } else if (val.length === 0) {
-          setStatus('idle');
-      }
+        setApiKey(val);
+        localStorage.setItem('GEMINI_API_KEY', val);
+        if (val === '') setStatus('idle');
     }
   };
 
@@ -121,7 +103,6 @@ export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApi
     if (!aiQuestion.trim() || isAsking) return;
     setIsAsking(true);
     try {
-      // NOTA: No pasamos apiKey aquí, askGemini usa process.env.API_KEY automáticamente
       const res = await askGemini(aiQuestion, selectedModel);
       setAiAnswer(res);
     } catch (e: any) {
@@ -153,38 +134,40 @@ export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApi
 
         <div className="p-6 overflow-y-auto space-y-6 custom-scrollbar">
           
-          {/* SECCIÓN 1: IDENTIDAD Y LLAVES */}
+          {/* SECCIÓN API KEY */}
           <div className="space-y-4 bg-gray-50/30 p-4 rounded-3xl border border-gray-100">
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-gray-900 flex items-center justify-between px-1">
-                <span className="flex items-center gap-2">
-                    <Key size={14} className="text-red-700" /> Gemini API Key
-                </span>
-                {!apiKey && (
-                    <span className="text-[8px] text-red-700 font-black animate-pulse flex items-center gap-1">
-                        <ShieldAlert size={10} /> REQUERIDA
-                    </span>
-                )}
-              </label>
-              <div className="relative">
-                <input 
-                  type={showKey ? "text" : "password"}
-                  value={apiKey}
-                  onChange={(e) => handleKeyChange(e.target.value)}
-                  placeholder="Introduce tu API Key o código..."
-                  className={`w-full bg-white border ${!apiKey ? 'border-red-200' : 'border-gray-200'} p-3 rounded-2xl text-xs font-mono outline-none focus:ring-2 focus:ring-gray-900 transition-all shadow-sm placeholder:italic placeholder:text-gray-300`}
-                />
-                <button 
-                  type="button" 
-                  onClick={() => setShowKey(!showKey)} 
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-red-700"
-                >
-                  {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
-              </div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-900 flex items-center gap-2 px-1">
+                  <Key size={14} className="text-red-700" /> Google Gemini API Key
+                </label>
+                <div className="relative group">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={apiKey}
+                    onChange={handleApiKeyChange}
+                    placeholder="Introduce API Key o código..."
+                    className="w-full bg-white border border-gray-200 p-3 pr-20 rounded-2xl text-xs font-mono outline-none focus:ring-2 focus:ring-gray-900 shadow-sm transition-colors hover:border-red-200"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    <button 
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="p-1 text-gray-400 hover:text-red-700 transition-colors"
+                      title={showPassword ? "Ocultar clave" : "Ver clave"}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                    {apiKey && (
+                      <button 
+                        onClick={() => { setApiKey(''); localStorage.removeItem('GEMINI_API_KEY'); setStatus('idle'); }}
+                        className="p-1 text-gray-400 hover:text-red-700 transition-colors"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
             </div>
 
-            {/* MOTOR DE IA DINÁMICO */}
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-gray-900 flex items-center gap-2 px-1">
                 <Cpu size={14} className="text-red-700" /> Inteligencia del Sistema
@@ -193,7 +176,7 @@ export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApi
                 <select 
                   value={selectedModel}
                   onChange={handleModelChange}
-                  disabled={isLoadingModels || !apiKey}
+                  disabled={isLoadingModels}
                   className="w-full bg-white border border-gray-200 p-3 rounded-2xl text-xs font-bold uppercase tracking-wider appearance-none outline-none focus:ring-2 focus:ring-gray-900 cursor-pointer disabled:opacity-50 shadow-sm transition-colors hover:border-red-200"
                 >
                   {availableModels.length > 0 ? (
@@ -203,7 +186,7 @@ export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApi
                       </option>
                     ))
                   ) : (
-                    <option value="">{isLoadingModels ? 'Sincronizando modelos...' : !apiKey ? 'Configura tu API Key' : 'No se detectan modelos'}</option>
+                    <option value="">{isLoadingModels ? 'Sincronizando modelos...' : 'No se detectan modelos'}</option>
                   )}
                 </select>
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300">
@@ -219,11 +202,11 @@ export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApi
                <div className="flex items-center gap-3">
                  <div className={`w-2.5 h-2.5 rounded-full ${status === 'success' ? 'bg-green-500 animate-pulse' : status === 'error' ? 'bg-red-500' : 'bg-gray-200'}`}></div>
                  <span className="text-[9px] font-black text-gray-900 uppercase tracking-widest">
-                   {status === 'success' ? 'AI ONLINE' : status === 'error' ? 'KEY ERROR' : 'IDLE'}
+                   {status === 'success' ? 'AI ONLINE' : status === 'error' ? 'AI OFFLINE' : 'IDLE'}
                  </span>
                </div>
-               <button onClick={() => handleConfigCheck(apiKey)} disabled={isValidating || !apiKey} className="text-gray-400 hover:text-red-700 transition-all active:rotate-180 disabled:opacity-20">
-                 {isValidating ? <Loader2 size={14} className="animate-spin" /> : <RefreshCcw size={14} />}
+               <button onClick={loadModels} disabled={isLoadingModels} className="text-gray-400 hover:text-red-700 transition-all active:rotate-180 disabled:opacity-20">
+                 {isLoadingModels ? <Loader2 size={14} className="animate-spin" /> : <RefreshCcw size={14} />}
                </button>
              </div>
 
@@ -270,13 +253,12 @@ export const Ajustes: React.FC<AjustesProps> = ({ isOpen, onClose, apiKey, onApi
                <textarea 
                  value={aiQuestion}
                  onChange={(e) => setAiQuestion(e.target.value)}
-                 disabled={!apiKey}
-                 placeholder={!apiKey ? "Configura tu API Key para preguntar..." : "Pregunta algo al motor seleccionado..."}
-                 className="w-full bg-gray-50 border border-gray-200 p-3 rounded-2xl text-[11px] font-medium min-h-[80px] outline-none focus:ring-2 focus:ring-gray-900 transition-all resize-none shadow-inner disabled:opacity-50"
+                 placeholder="Pregunta algo al motor seleccionado..."
+                 className="w-full bg-gray-50 border border-gray-200 p-3 rounded-2xl text-[11px] font-medium min-h-[80px] outline-none focus:ring-2 focus:ring-gray-900 transition-all resize-none shadow-inner"
                />
                <button 
                  onClick={handleAiAsk}
-                 disabled={isAsking || !aiQuestion.trim() || !apiKey}
+                 disabled={isAsking || !aiQuestion.trim()}
                  className="absolute bottom-2 right-2 p-2 bg-gray-900 text-white rounded-xl hover:bg-black shadow-lg disabled:opacity-20 active:scale-90 transition-all"
                >
                  {isAsking ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}

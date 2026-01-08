@@ -46,7 +46,6 @@ export default function App({ userIp, theme, onThemeChange }: AppProps): React.R
     const [availableEngines, setAvailableEngines] = useState<string[]>([]);
     const [sessions, setSessions] = useLocalStorage<AnalysisSession[]>('analysisSessions', []);
     const [activeSessionId, setActiveSessionId] = useLocalStorage<string | null>('activeAnalysisSessionId', null);
-    const [apiKey, setApiKey] = useLocalStorage<string>('GEMINI_API_KEY', '');
     
     // Modales de Plantilla
     const [showAjustesModal, setShowAjustesModal] = useState(false);
@@ -93,7 +92,8 @@ export default function App({ userIp, theme, onThemeChange }: AppProps): React.R
                 setAvailableEngines(engines);
                 if (!engines.includes(currentEngine)) setCurrentEngine(engines[0]);
             } catch (err) {
-                setAvailableEngines(['gemini-3-flash-preview']);
+                // El ErrorBoundary capturará si esto falla por API Key
+                console.error("Initialization failed:", err);
             }
         };
         const loadRates = async () => {
@@ -111,6 +111,9 @@ export default function App({ userIp, theme, onThemeChange }: AppProps): React.R
         if (e instanceof QuotaExceededError) {
             setIsQuotaExhausted(true);
             setError({ title: `Cuota Excedida`, message: e.message });
+        } else if (e.name === 'ApiKeyMissingError') {
+            // Forzar disparo del ErrorBoundary para diagnóstico completo
+            throw e;
         } else {
             setError({ title, message: e instanceof Error ? e.message : message });
         }
@@ -243,8 +246,6 @@ export default function App({ userIp, theme, onThemeChange }: AppProps): React.R
                 isOpen={showAjustesModal} 
                 onClose={() => setShowAjustesModal(false)} 
                 userIp={userIp} 
-                apiKey={apiKey}
-                onApiKeySave={setApiKey}
             />
             <CookiesModal isOpen={showCookiesModal} onClose={() => setShowCookiesModal(false)} />
         </div>

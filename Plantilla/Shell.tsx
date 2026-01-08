@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { BarChart3, Sparkles, HelpCircle, AlertCircle, CheckCircle2, X, ChevronDown, Coins, Check } from 'lucide-react';
+import { BarChart3, HelpCircle, CheckCircle2, ChevronDown, Coins, Check } from 'lucide-react';
 import { COLORS, CURRENCIES } from './Parameters';
 import { Footer } from './Footer';
 import { Cookies } from './Cookies';
@@ -15,9 +15,6 @@ interface ShellProps {
   currency: Currency;
   onCurrencyChange: (c: Currency) => void;
   rates: Record<Currency, number>;
-  // Added missing props to fix TS error
-  apiKey: string;
-  onApiKeySave: (key: string) => void;
 }
 
 export const Shell: React.FC<ShellProps> = ({ 
@@ -25,10 +22,7 @@ export const Shell: React.FC<ShellProps> = ({
   userIp, 
   currency,
   onCurrencyChange,
-  rates,
-  // Destructured missing props
-  apiKey,
-  onApiKeySave
+  rates
 }) => {
   const [showAjustes, setShowAjustes] = useState(false);
   const [showCookies, setShowCookies] = useState(false);
@@ -149,9 +143,6 @@ export const Shell: React.FC<ShellProps> = ({
         isOpen={showAjustes} 
         onClose={() => setShowAjustes(false)} 
         userIp={userIp}
-        // Passed required props to fix TS error
-        apiKey={apiKey}
-        onApiKeySave={onApiKeySave}
       />
 
       {/* MODAL PRIVACIDAD Y COOKIES */}

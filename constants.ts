@@ -17,7 +17,7 @@ export const VECTOR_DESCRIPTIONS: Record<string, string> = {
   "Riesgos Clave": "Identifica y analiza los principales riesgos operativos, de mercado, regulatorios o competitivos que podrían afectar negativamente al activo.",
 };
 
-export const APP_VERSION = 'v25.v12I';
+export const APP_VERSION = 'v26.01A_Beta';
 
 // Los valores por defecto se usan como fallback.
 // Se actualizan al cargar la app mediante updateExchangeRates en geminiService.

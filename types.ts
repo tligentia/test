@@ -8,19 +8,19 @@ export class QuotaExceededError extends Error {
     }
 }
 
+export class ApiKeyMissingError extends Error {
+    constructor() {
+        super("CRITICAL_CONFIG_ERROR: La clave API (process.env.API_KEY) no está definida en el entorno de ejecución. El SDK de Gemini no puede inicializarse.");
+        this.name = 'ApiKeyMissingError';
+    }
+}
+
 export class AnomalousPriceError extends Error {
     price: number;
     constructor(message: string, price: number) {
         super(message);
         this.name = 'AnomalousPriceError';
         this.price = price;
-    }
-}
-
-export class ApiKeyNotSetError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'ApiKeyNotSetError';
     }
 }
 
@@ -45,12 +45,6 @@ export interface AnalysisContent {
     sentiment: number;
     limitBuyPrice?: number;
     currency?: string;
-}
-
-export interface AiAnswer {
-    summary:string;
-    fullText: string;
-    sources?: Source[];
 }
 
 export interface AnalysisVector {
@@ -85,18 +79,10 @@ export interface GlobalAnalysisState {
 export interface AppError {
     title: string;
     message: string;
+    debugInfo?: any;
 }
 
-export interface ReportData {
-    asset: Asset;
-    globalAnalysis: GlobalAnalysisState;
-    analyses: AnalysisVector[];
-}
-
-/**
- * Valid views in the application.
- */
-export type View = 'analysis' | 'market' | 'portfolio' | 'calculator' | 'alternatives' | 'history' | 'charts' | 'cookie-policy';
+export type View = 'analysis' | 'market' | 'portfolio' | 'calculator' | 'alternatives' | 'history' | 'charts';
 export type Theme = 'light' | 'dark' | 'system';
 export type Currency = 'EUR' | 'USD' | 'GBP' | 'JPY' | 'BTC';
 
@@ -108,12 +94,6 @@ export interface CalculatorState {
     endPriceInput: string;
     inflationRate: string;
     limitBuyPrice?: string;
-}
-
-export interface ChatMessage {
-    role: 'user' | 'model';
-    text: string;
-    timestamp: number;
 }
 
 export interface AnalysisSession {
@@ -131,7 +111,7 @@ export interface AnalysisSession {
     haveAlternativesBeenFetched: boolean;
     isAnalyzingAll: boolean;
     calculatorState?: CalculatorState;
-    chatHistory: ChatMessage[];
+    chatHistory: any[];
 }
 
 export interface MarketAssetMetric {
@@ -183,26 +163,21 @@ export interface Portfolio {
     items: PortfolioItem[];
 }
 
+/**
+ * Interface representing the data structure for the exportable report.
+ */
+export interface ReportData {
+    asset: Asset;
+    globalAnalysis: GlobalAnalysisState;
+    analyses: AnalysisVector[];
+}
+
+/**
+ * Interface representing a portfolio item augmented with live market data.
+ */
 export interface PortfolioItemWithMarketData extends PortfolioItem {
     currentPrice: number | null;
     marketValue: number | null;
     gainLoss: number | null;
     gainLossPercentage: number | null;
 }
-
-/**
- * Represents a single data point in a stock chart.
- */
-export interface StockData {
-    date: string;
-    open: number;
-    high: number;
-    low: number;
-    close: number;
-    volume: number;
-}
-
-/**
- * Time periods for filtering stock data.
- */
-export type Period = '1D' | '1W' | '1M' | 'YTD' | '1Y' | '2Y' | '5Y';
