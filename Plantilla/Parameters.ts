@@ -55,29 +55,19 @@ export const saveAllowedIps = (ips: string[]) => {
   localStorage.setItem('app_allowed_ips', JSON.stringify(ips));
 };
 
-// --- LÓGICA DE CLAVES Y OFUSCACIÓN ---
+// --- LÓGICA DE CLAVES Y OFUSCACIÓN (PROTOCOLO TLIGENT) ---
 
-/**
- * Obtiene la clave maestra dinámica desde el LocalStorage (sincronizada por AppMenu)
- * o utiliza la clave de respaldo por defecto.
- */
-const getRemoteKey = (): string => {
-  return localStorage.getItem('app_remote_master_key') || 'tligent_default_2025';
-};
+const MASTER_SEED = "tligent";
 
 export const crypto = {
     /**
-     * Ofusca el texto utilizando un proceso de XOR y Base64 basado en la clave maestra actual.
+     * Ofusca el texto utilizando XOR y Base64.
      */
-    obfuscate: (text: string, customKey?: string) => {
-       const key = customKey || getRemoteKey();
+    obfuscate: (text: string) => {
        try {
-           // Proceso Tligent: Texto -> Base64 -> XOR con Key -> Base64
-           let b64 = btoa(text);
-           let xored = '';
-           for (let i = 0; i < b64.length; i++) {
-               xored += String.fromCharCode(b64.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-           }
+           const xored = text.split('').map((char, i) => 
+               String.fromCharCode(char.charCodeAt(0) ^ MASTER_SEED.charCodeAt(i % MASTER_SEED.length))
+           ).join('');
            return btoa(xored);
        } catch (e) { 
            console.error("Obfuscation error", e);
@@ -87,41 +77,34 @@ export const crypto = {
     /**
      * Desofusca el texto invirtiendo el proceso de XOR y Base64.
      */
-    deobfuscate: (text: string, customKey?: string) => {
-        const key = customKey || getRemoteKey();
+    deobfuscate: (encoded: string) => {
         try {
-            let dexored = atob(text);
-            let resultB64 = '';
-            for (let i = 0; i < dexored.length; i++) {
-                resultB64 += String.fromCharCode(dexored.charCodeAt(i) ^ key.charCodeAt(i % key.length));
-            }
-            return atob(resultB64);
+            const decoded = atob(encoded);
+            return decoded.split('').map((char, i) => 
+                String.fromCharCode(char.charCodeAt(0) ^ MASTER_SEED.charCodeAt(i % MASTER_SEED.length))
+            ).join('');
         } catch(e) { 
             console.error("Deobfuscation error", e);
-            return text; 
+            return encoded; 
         }
     }
 }
 
 /**
- * Devuelve la API Key desofuscada si el código introducido coincide con un atajo.
- * Utiliza el sistema de desofuscación dinámico vinculado a la hoja de cálculo.
+ * Devuelve la API Key revelada si el código coincide con 'ok' o 'cv'.
+ * Utiliza los secretos ofuscados y la semilla 'tligent'.
  */
 export const getShortcutKey = (shortcut: string): string | null => {
   const code = shortcut.toLowerCase().trim();
   
-  // Las cadenas a continuación han sido pre-ofuscadas con la lógica Tligent.
-  // Al usar crypto.deobfuscate, se garantiza que solo se descifren correctamente
-  // si la clave maestra (por defecto o de Google Sheets) es la correcta.
-  
   if (code === 'ok') {
-      // Clave Gemini 1 ofuscada
-      return crypto.deobfuscate("ExYVGR0fEBYfExAVHhMRAxoYExAVExAaExEUAxoTFRIREhYVExEVFxoTFRYf");
+      // Secreto Ofuscado para OK (Sistema)
+      return crypto.deobfuscate("NSUTBjYXNicpJlE3BxYWXhhSCFhFPzNQVyYZOBI5PR8ECg41Lw4i");
   }
   
   if (code === 'cv') {
-      // Clave Gemini 2 ofuscada
-      return crypto.deobfuscate("ExYVGR0fEBYfExAdExEUAxoTFRIRExAeEhYVExAaExEUAxYfExYVExEVExAV");
+      // Secreto Ofuscado para CV (Colaborador)
+      return crypto.deobfuscate("NSUTBjYXNRczGh8LBEwaBzEuFSpDIFUkOEgKIy5fOi0pHTYgIygi");
   }
   
   return null;

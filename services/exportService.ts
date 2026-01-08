@@ -1,4 +1,3 @@
-
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import * as docx from 'docx';
@@ -19,9 +18,9 @@ const downloadBlob = (blob: Blob, filename: string) => {
 
 const getSanitizedFileName = (name: string) => {
     return name
-        .replace(/[^a-z0-9-]/gi, '_') // Reemplaza no alfanuméricos (excepto guiones) con guion bajo
-        .replace(/_+/g, '_')         // Colapsa múltiples guiones bajos en uno solo
-        .replace(/^_|_$/g, '')       // Elimina guiones bajos al principio o al final
+        .replace(/[^a-z0-9-]/gi, '_') 
+        .replace(/_+/g, '_')         
+        .replace(/^_|_$/g, '')       
         .toLowerCase();
 };
 
@@ -36,44 +35,29 @@ const getReportFileName = (asset: ReportData['asset'], extension: string) => {
 
 const getHtmlStyles = () => `
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 0; }
-  .report-container { max-width: 800px; margin: 2rem auto; background-color: white; padding: 2.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-  h1, h2, h3, h4 { color: #1e293b; line-height: 1.25; margin-top: 1.75em; margin-bottom: 0.75em;}
-  h1 { font-size: 2.25rem; font-weight: 800; color: #b91c1c; text-align: center; margin-top: 0; }
-  h2 { font-size: 1.5rem; font-weight: 700; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;}
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #000000; background-color: #ffffff; margin: 0; padding: 0; }
+  .report-container { max-width: 800px; margin: 2rem auto; background-color: white; padding: 2.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+  h1, h2, h3, h4 { color: #000000; line-height: 1.25; margin-top: 1.75em; margin-bottom: 0.75em;}
+  h1 { font-size: 2.25rem; font-weight: 800; color: #dc2626; text-align: center; margin-top: 0; }
+  h2 { font-size: 1.5rem; font-weight: 700; border-bottom: 2px solid #f3f4f6; padding-bottom: 0.5rem; display: flex; align-items: center; gap: 0.75rem;}
   h3 { font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.75rem;}
-  h4 { font-size: 1.1rem; font-weight: 600; color: #334155; }
+  h4 { font-size: 1.1rem; font-weight: 600; color: #374151; }
   p { margin-bottom: 1em; }
-  a { color: #2563eb; text-decoration: none; }
+  a { color: #dc2626; text-decoration: none; }
   a:hover { text-decoration: underline; }
-  .header-sub { text-align: center; color: #475569; font-size: 1.125rem; margin-top: -1rem; margin-bottom: 2rem; }
-  .asset-info { background-color: #f1f5f9; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
-  .sentiment-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 9999px; line-height: 1; }
-  .summary { font-style: italic; color: #475569; border-left: 4px solid #cbd5e1; padding-left: 1rem; margin: 1rem 0; }
-  .full-text { color: #334155; }
-  .sources-list { list-style: none; padding: 0; margin-top: 1.5rem; border-top: 1px dashed #cbd5e1; padding-top: 1rem; }
+  .header-sub { text-align: center; color: #6b7280; font-size: 1.125rem; margin-top: -1rem; margin-bottom: 2rem; }
+  .asset-info { background-color: #f9fafb; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
+  .sentiment-badge { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; font-weight: 700; padding: 0.25rem 0.65rem; border-radius: 4px; line-height: 1; }
+  .summary { font-style: italic; color: #4b5563; border-left: 4px solid #e5e7eb; padding-left: 1rem; margin: 1rem 0; }
+  .full-text { color: #000000; }
+  .sources-list { list-style: none; padding: 0; margin-top: 1.5rem; border-top: 1px dashed #e5e7eb; padding-top: 1rem; }
   .sources-list li { margin-bottom: 0.5rem; }
-  .sources-list a { font-size: 0.875rem; color: #475569; word-break: break-all; }
+  .sources-list a { font-size: 0.875rem; color: #6b7280; word-break: break-all; }
   .section { margin-bottom: 2rem; }
-  .footer { text-align: center; margin-top: 3rem; font-size: 0.875rem; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 1rem; }
+  .footer { text-align: center; margin-top: 3rem; font-size: 0.875rem; color: #9ca3af; border-top: 1px solid #f3f4f6; padding-top: 1rem; }
   @media print {
-    @page {
-        margin-top: 2.5cm;
-        margin-bottom: 2.5cm;
-        margin-left: 2cm;
-        margin-right: 2cm;
-    }
-    body {
-        background-color: #ffffff;
-    }
-    .report-container {
-        box-shadow: none;
-        border: none;
-        margin: 0;
-        padding: 0;
-        border-radius: 0;
-        max-width: 100%;
-    }
+    body { background-color: #ffffff; }
+    .report-container { box-shadow: none; border: none; margin: 0; padding: 0; max-width: 100%; }
   }
 </style>
 `;
@@ -104,9 +88,9 @@ const generateHtmlContent = ({ asset, globalAnalysis, analyses }: ReportData): s
         </header>
 
         ${globalAnalysis.content ? `
-        <section class="section" style="background-color: #fef2f2; border: 1px solid #fecaca; padding: 1.5rem; border-radius: 0.5rem;">
-            <h2><i class="fas fa-globe-europe"></i> Visión Global Consolidada ${getSentimentHtml(globalAnalysis.content.sentiment)}</h2>
-            <p class="summary" style="border-left-color: #ef4444;">${globalAnalysis.content.summary}</p>
+        <section class="section" style="background-color: #ffffff; border: 1px solid #f3f4f6; padding: 1.5rem; border-radius: 0.5rem;">
+            <h2>Visión Global Consolidada ${getSentimentHtml(globalAnalysis.content.sentiment)}</h2>
+            <p class="summary">${globalAnalysis.content.summary}</p>
             <div class="full-text">${formatTextToHtml(globalAnalysis.content.fullText)}</div>
             ${getSourcesHtml(globalAnalysis.sources)}
         </section>
@@ -135,8 +119,6 @@ const generateHtmlContent = ({ asset, globalAnalysis, analyses }: ReportData): s
 };
 
 
-// --- FORMAT SPECIFIC EXPORTERS ---
-
 export const exportAsHtml = (reportData: ReportData) => {
     const htmlContent = generateHtmlContent(reportData);
     const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -148,23 +130,24 @@ export const exportAsPdf = async (reportData: ReportData) => {
     const container = document.createElement('div');
     container.style.position = 'absolute';
     container.style.left = '-9999px';
+    container.style.width = '800px';
     container.innerHTML = htmlContent;
     document.body.appendChild(container);
 
     const contentEl = container.querySelector<HTMLElement>('.report-container');
     if (!contentEl) {
         document.body.removeChild(container);
-        throw new Error('Could not find report content element for PDF generation.');
+        throw new Error('No se pudo encontrar el contenido para generar el PDF.');
     }
 
-    const canvas = await html2canvas(contentEl, { scale: 2 });
+    const canvas = await html2canvas(contentEl, { scale: 2, useCORS: true });
     document.body.removeChild(container);
 
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     
-    const pageTopBottomMargin = 25; // 2.5cm
-    const pageLeftRightMargin = 20; // 2.0cm
+    const pageTopBottomMargin = 20; 
+    const pageLeftRightMargin = 15; 
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
@@ -195,33 +178,28 @@ export const exportAsPdf = async (reportData: ReportData) => {
     for (let i = 1; i <= pageCount; i++) {
         pdf.setPage(i);
         pdf.setFontSize(8);
-        pdf.setTextColor(100);
-        const text = `${reportData.asset.name} | Página ${i} de ${pageCount}`;
+        pdf.setTextColor(150);
+        const text = `${reportData.asset.name} | Informe InversIA | Página ${i} de ${pageCount}`;
         const textWidth = pdf.getStringUnitWidth(text) * pdf.getFontSize() / pdf.internal.scaleFactor;
         const x = (pdfWidth - textWidth) / 2;
-        pdf.text(text, x, pdfHeight - (pageTopBottomMargin / 2));
+        pdf.text(text, x, pdfHeight - 10);
     }
     
     pdf.save(getReportFileName(reportData.asset, 'pdf'));
 };
 
 const createSectionTitleWithSentiment = (text: string, headingLevel: any, score?: number): docx.Paragraph => {
-    const children: docx.TextRun[] = [new docx.TextRun({ text })];
+    const children: docx.TextRun[] = [new docx.TextRun({ text, bold: true })];
 
     if (score !== undefined) {
         const styles = getSentimentStyles(score);
-        children.push(new docx.TextRun({ text: "  " })); // Spacer
+        children.push(new docx.TextRun({ text: "  " })); 
         children.push(new docx.TextRun({
-            text: `${styles.icon} ${styles.label}`,
-            shading: {
-                type: docx.ShadingType.CLEAR,
-                fill: styles.bgColor.replace('#', ''),
-                color: "auto",
-            },
+            text: `[ ${styles.label} ]`,
             color: styles.textColor.replace('#', ''),
             font: { name: "Calibri" },
             bold: true,
-            size: 20, // 10pt
+            size: 18, 
         }));
     }
 
@@ -236,15 +214,15 @@ const createDocxContent = (content: AnalysisContent, sources?: Source[]): docx.P
     const paragraphs: docx.Paragraph[] = [
         new docx.Paragraph({
             children: [new docx.TextRun({ text: content.summary, italics: true })],
-            style: "aside"
+            spacing: { after: 200 },
+            indent: { left: 720 }
         }),
         ...content.fullText.split('\n').filter(t => t.trim()).map(line => new docx.Paragraph({ children: [new docx.TextRun({ text: line })], spacing: { after: 120 }})),
     ];
 
     if (sources && sources.length > 0) {
         paragraphs.push(new docx.Paragraph({
-            children: [new docx.TextRun({ text: "Fuentes Consultadas" })],
-            style: "sourceHeading",
+            children: [new docx.TextRun({ text: "Fuentes Consultadas", bold: true })],
             spacing: { before: 200, after: 100 },
         }));
         sources.forEach(source => {
@@ -260,8 +238,7 @@ const createDocxContent = (content: AnalysisContent, sources?: Source[]): docx.P
                         link: source.uri,
                     }),
                 ],
-                bullet: { level: 0 },
-                style: "sourceItem"
+                bullet: { level: 0 }
             }));
         });
     }
@@ -273,10 +250,10 @@ export const exportAsDocx = async (reportData: ReportData) => {
     const { asset, globalAnalysis, analyses } = reportData;
 
     const children: (docx.Paragraph | docx.Table)[] = [
-        new docx.Paragraph({ children: [new docx.TextRun({ text: "InversIA" })], heading: docx.HeadingLevel.TITLE, alignment: docx.AlignmentType.CENTER }),
-        new docx.Paragraph({ children: [new docx.TextRun({ text: "Informe de Análisis Estratégico" })], alignment: docx.AlignmentType.CENTER, spacing: { after: 300 } }),
-        new docx.Paragraph({ children: [new docx.TextRun({ text: `${asset.name} (${asset.ticker})` })], heading: docx.HeadingLevel.HEADING_1 }),
-        new docx.Paragraph({ children: [new docx.TextRun({ text: `Fecha: ${new Date().toLocaleDateString('es-ES')}` })], style: "subtle" }),
+        new docx.Paragraph({ children: [new docx.TextRun({ text: "InversIA", bold: true, size: 48, color: "DC2626" })], alignment: docx.AlignmentType.CENTER }),
+        new docx.Paragraph({ children: [new docx.TextRun({ text: "Informe de Análisis Estratégico", size: 24 })], alignment: docx.AlignmentType.CENTER, spacing: { after: 600 } }),
+        new docx.Paragraph({ children: [new docx.TextRun({ text: `${asset.name} (${asset.ticker})`, bold: true, size: 32 })], heading: docx.HeadingLevel.HEADING_1 }),
+        new docx.Paragraph({ children: [new docx.TextRun({ text: `Fecha de Generación: ${new Date().toLocaleDateString('es-ES')}` })], spacing: { after: 400 } }),
     ];
     
     if (globalAnalysis.content) {
@@ -285,7 +262,7 @@ export const exportAsDocx = async (reportData: ReportData) => {
     }
     
     if (analyses.length > 0) {
-        children.push(new docx.Paragraph({ children: [new docx.TextRun({ text: "Vectores de Análisis" })], heading: docx.HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 } }));
+        children.push(new docx.Paragraph({ children: [new docx.TextRun({ text: "Vectores de Análisis", bold: true })], heading: docx.HeadingLevel.HEADING_2, spacing: { before: 400, after: 200 } }));
         analyses.forEach(v => {
             if (v.content) {
                 children.push(createSectionTitleWithSentiment(v.title, docx.HeadingLevel.HEADING_3, v.content.sentiment));
@@ -297,30 +274,14 @@ export const exportAsDocx = async (reportData: ReportData) => {
     const doc = new docx.Document({
         creator: "InversIA",
         title: `Informe para ${asset.name}`,
-        styles: {
-            paragraphStyles: [{
-                id: "aside", name: "Aside", basedOn: "Normal", next: "Normal",
-                run: { color: "595959", italics: true },
-            }, {
-                id: "subtle", name: "Subtle", basedOn: "Normal", next: "Normal",
-                run: { color: "888888", size: 18 },
-            },{
-                id: "sourceHeading", name: "Source Heading", basedOn: "Normal", next: "Normal",
-                run: { bold: true, size: 22 },
-            },{
-                id: "sourceItem", name: "Source Item", basedOn: "Normal", next: "Normal",
-                run: { size: 18 },
-            }],
-        },
         sections: [{ 
             properties: {
                 page: {
-                    margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }, // 1 inch
+                    margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }, 
                 },
             },
-            headers: { default: new docx.Header({ children: [new docx.Paragraph({ children: [new docx.TextRun({ text: `Informe InversIA: ${asset.name}` })], alignment: docx.AlignmentType.RIGHT })]})},
+            headers: { default: new docx.Header({ children: [new docx.Paragraph({ children: [new docx.TextRun({ text: `InversIA - ${asset.ticker}` })], alignment: docx.AlignmentType.RIGHT })]})},
             footers: { default: new docx.Footer({ children: [new docx.Paragraph({ alignment: docx.AlignmentType.CENTER, children: [
-                new docx.TextRun({ text: `${asset.name} (${asset.ticker})  |  ` }),
                 new docx.TextRun({
                     children: [
                         "Página ",
@@ -434,10 +395,9 @@ export const copyToClipboard = async (reportData: ReportData) => {
             new ClipboardItem({ [blob.type]: blob }),
         ]);
     } catch (err) {
-        console.error('Failed to copy rich text: ', err);
-        // Fallback to plain text
+        console.error('Fallo al copiar texto enriquecido: ', err);
         const textContent = generateTxtContent(reportData);
         await navigator.clipboard.writeText(textContent);
-        alert('Contenido enriquecido no soportado, se ha copiado como texto plano.');
+        alert('Copiado como texto plano.');
     }
 };
